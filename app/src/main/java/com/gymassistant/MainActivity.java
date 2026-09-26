@@ -1,267 +1,37 @@
 package com.gymassistant;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.view.Gravity;
-import android.widget.*;
-import java.util.*;
+import android.app.*; import android.os.*; import android.content.*; import android.graphics.*; import android.view.*; import android.widget.*; import java.util.*;
 
 public class MainActivity extends Activity {
-    private LinearLayout root, content;
-    private SharedPreferences prefs;
-    private final int purple = Color.rgb(124,77,255);
-    private final int bg = Color.rgb(18,18,18);
-    private final int card = Color.rgb(30,30,30);
-    private final int text = Color.WHITE;
-    private final int muted = Color.rgb(185,185,185);
+    FrameLayout root; LinearLayout body; SharedPreferences p;
+    String level,goal,equipment; int days,duration,done,streak;
+    final int PURPLE=Color.rgb(139,92,246), WHITE=Color.rgb(247,247,251), MUTED=Color.rgb(156,163,175);
+    static class E { String n,m,s,r,rest; E(String a,String b,String c,String d,String e){n=a;m=b;s=c;r=d;rest=e;} }
+    ArrayList<E> ex=new ArrayList<>();
 
-    @Override public void onCreate(Bundle b) {
-        super.onCreate(b);
-        prefs = getSharedPreferences("gym", MODE_PRIVATE);
-        showHome();
-    }
-
-    private TextView title(String s, int size) {
-        TextView v = new TextView(this);
-        v.setText(s);
-        v.setTextColor(text);
-        v.setTextSize(size);
-        v.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        v.setPadding(0, 8, 0, 12);
-        return v;
-    }
-
-    private TextView label(String s) {
-        TextView v = new TextView(this);
-        v.setText(s);
-        v.setTextColor(muted);
-        v.setTextSize(14);
-        v.setPadding(0, 8, 0, 6);
-        return v;
-    }
-
-    private Button button(String s) {
-        Button b = new Button(this);
-        b.setText(s);
-        b.setTextColor(Color.WHITE);
-        b.setTextSize(15);
-        b.setAllCaps(false);
-        b.setBackgroundColor(purple);
-        return b;
-    }
-
-    private void base(String pageTitle) {
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(bg);
-        root.setPadding(24, 24, 24, 16);
-
-        LinearLayout top = new LinearLayout(this);
-        top.setGravity(Gravity.CENTER_VERTICAL);
-        TextView t = title(pageTitle, 25);
-        top.addView(t, new LinearLayout.LayoutParams(0, -2, 1));
-
-        Button home = new Button(this);
-        home.setText("Inicio");
-        home.setAllCaps(false);
-        home.setTextColor(Color.WHITE);
-        home.setBackgroundColor(Color.TRANSPARENT);
-        home.setOnClickListener(v -> showHome());
-        top.addView(home);
-
-        root.addView(top);
-
-        ScrollView scroll = new ScrollView(this);
-        content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        scroll.addView(content);
-        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        setContentView(root);
-    }
-
-    private void addSpace(int dp) {
-        Space s = new Space(this);
-        content.addView(s, new LinearLayout.LayoutParams(1, dp));
-    }
-
-    private void addCard(String heading, String body) {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(18, 16, 18, 16);
-        box.setBackgroundColor(card);
-
-        TextView h = title(heading, 18);
-        TextView b = label(body);
-        b.setTextSize(15);
-        b.setTextColor(text);
-
-        box.addView(h);
-        box.addView(b);
-        content.addView(box, new LinearLayout.LayoutParams(-1, -2));
-        addSpace(12);
-    }
-
-    private void showHome() {
-        base("Gym Assistant");
-        content.addView(title("Tu entrenamiento, simple.", 28));
-        content.addView(label("Generá una rutina adaptada a tu nivel, objetivo y días disponibles."));
-        addSpace(14);
-
-        String level = prefs.getString("level", "");
-        if (level.isEmpty()) {
-            addCard("Primer paso", "Configurá tu perfil y la app generará tu primera rutina.");
-            Button start = button("Crear mi rutina");
-            start.setOnClickListener(v -> showSetup());
-            content.addView(start, new LinearLayout.LayoutParams(-1, 58));
-        } else {
-            String goal = prefs.getString("goal", "Hipertrofia");
-            int days = prefs.getInt("days", 3);
-            addCard("Tu perfil", "Nivel: " + level + "\nObjetivo: " + goal + "\nDías por semana: " + days);
-
-            Button routine = button("Ver mi rutina");
-            routine.setOnClickListener(v -> showRoutine());
-            content.addView(routine, new LinearLayout.LayoutParams(-1, 58));
-
-            addSpace(10);
-
-            Button edit = button("Cambiar perfil");
-            edit.setOnClickListener(v -> showSetup());
-            content.addView(edit, new LinearLayout.LayoutParams(-1, 58));
-        }
-    }
-
-    private void showSetup() {
-        base("Crear perfil");
-        content.addView(title("Contame sobre vos", 26));
-        content.addView(label("Elegí las opciones que más se parezcan a vos."));
-        addSpace(8);
-
-        Spinner level = spinner(new String[]{"Principiante", "Intermedio", "Avanzado"});
-        Spinner goal = spinner(new String[]{"Hipertrofia", "Fuerza", "Pérdida de grasa", "Rendimiento general"});
-        Spinner days = spinner(new String[]{"1", "2", "3", "4", "5", "6"});
-        Spinner duration = spinner(new String[]{"30 minutos", "45 minutos", "60 minutos", "75 minutos", "90 minutos"});
-
-        content.addView(label("Nivel"));
-        content.addView(level);
-        content.addView(label("Objetivo"));
-        content.addView(goal);
-        content.addView(label("Días por semana"));
-        content.addView(days);
-        content.addView(label("Tiempo disponible"));
-        content.addView(duration);
-        addSpace(14);
-
-        Button save = button("Generar rutina");
-        save.setOnClickListener(v -> {
-            prefs.edit()
-                .putString("level", level.getSelectedItem().toString())
-                .putString("goal", goal.getSelectedItem().toString())
-                .putInt("days", Integer.parseInt(days.getSelectedItem().toString()))
-                .putString("duration", duration.getSelectedItem().toString())
-                .apply();
-            showRoutine();
-        });
-        content.addView(save, new LinearLayout.LayoutParams(-1, 58));
-    }
-
-    private Spinner spinner(String[] items) {
-        Spinner s = new Spinner(this);
-        ArrayAdapter<String> a = new ArrayAdapter<>(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            items
-        );
-        s.setAdapter(a);
-        return s;
-    }
-
-    private void showRoutine() {
-        base("Mi rutina");
-
-        int days = prefs.getInt("days", 3);
-        String level = prefs.getString("level", "Principiante");
-        String goal = prefs.getString("goal", "Hipertrofia");
-
-        content.addView(title(days + " días • " + goal, 24));
-        content.addView(label("Nivel " + level + " • rutina generada automáticamente"));
-        addSpace(8);
-
-        String[] splits;
-        if (days == 1) splits = new String[]{"Full Body"};
-        else if (days == 2) splits = new String[]{"Full Body A", "Full Body B"};
-        else if (days == 3) splits = new String[]{"Tren superior", "Tren inferior", "Full Body"};
-        else if (days == 4) splits = new String[]{"Superior A", "Inferior A", "Superior B", "Inferior B"};
-        else if (days == 5) splits = new String[]{"Push", "Pull", "Legs", "Upper", "Lower"};
-        else splits = new String[]{"Push A", "Pull A", "Legs A", "Push B", "Pull B", "Legs B"};
-
-        for (int i = 0; i < splits.length; i++) {
-            final int day = i;
-            addCard("Día " + (i + 1) + " — " + splits[i], exercisesFor(i, level));
-
-            Button open = button("Empezar día " + (i + 1));
-            open.setOnClickListener(v -> showSession(day, splits[day]));
-            content.addView(open, new LinearLayout.LayoutParams(-1, 52));
-            addSpace(10);
-        }
-    }
-
-    private String exercisesFor(int day, String level) {
-        String[][] bank = {
-            {"Sentadilla / prensa", "Press de banca", "Remo", "Peso muerto rumano", "Elevaciones laterales", "Abdominales"},
-            {"Press inclinado", "Jalón al pecho", "Prensa", "Curl femoral", "Curl de bíceps", "Tríceps"},
-            {"Press militar", "Dominadas/jalón", "Sentadilla búlgara", "Hip thrust", "Elevaciones laterales", "Gemelos"}
-        };
-
-        StringBuilder s = new StringBuilder();
-        String[] list = bank[day % bank.length];
-
-        for (String e : list) {
-            s.append("• ").append(e).append(" — 3 series\n");
-        }
-
-        if (level.equals("Principiante")) {
-            s.append("\nDescansá 60–120 s y priorizá la técnica.");
-        } else {
-            s.append("\nDejá 1–3 repeticiones en reserva en la mayoría de las series.");
-        }
-
-        return s.toString().trim();
-    }
-
-    private void showSession(int day, String name) {
-        base("Entrenamiento");
-        content.addView(title(name, 25));
-        content.addView(label("Marcá cada ejercicio al terminar."));
-        addSpace(8);
-
-        String[] ex = {
-            "Calentamiento",
-            "Ejercicio principal",
-            "Segundo ejercicio",
-            "Accesorio 1",
-            "Accesorio 2",
-            "Core / final"
-        };
-
-        for (String e : ex) {
-            CheckBox c = new CheckBox(this);
-            c.setText(e + " • 3 series");
-            c.setTextColor(text);
-            c.setTextSize(16);
-            c.setPadding(0, 12, 0, 12);
-            content.addView(c);
-        }
-
-        addSpace(12);
-
-        Button finish = button("Terminar entrenamiento");
-        finish.setOnClickListener(v -> {
-            Toast.makeText(this, "¡Entrenamiento terminado! Buen trabajo.", Toast.LENGTH_LONG).show();
-            showRoutine();
-        });
-        content.addView(finish, new LinearLayout.LayoutParams(-1, 58));
-    }
+    public void onCreate(Bundle b){super.onCreate(b);p=getSharedPreferences("gym",0);load();setContentView(R.layout.activity_main);root=findViewById(R.id.content);nav();home();}
+    void load(){level=p.getString("level","Principiante");goal=p.getString("goal","Hipertrofia");equipment=p.getString("equipment","Gimnasio completo");days=p.getInt("days",4);duration=p.getInt("duration",60);done=p.getInt("done",0);streak=p.getInt("streak",0);}
+    void save(){p.edit().putString("level",level).putString("goal",goal).putString("equipment",equipment).putInt("days",days).putInt("duration",duration).putInt("done",done).putInt("streak",streak).apply();}
+    void nav(){TextView[] v={findViewById(R.id.navHome),findViewById(R.id.navTrain),findViewById(R.id.navProgress),findViewById(R.id.navProfile),findViewById(R.id.navMore)};String[] s={"⌂\nInicio","⚡\nEntrenar","◔\nProgreso","●\nPerfil","☰\nMás"};for(int i=0;i<5;i++)v[i].setText(s[i]);v[0].setOnClickListener(x->home());v[1].setOnClickListener(x->plan());v[2].setOnClickListener(x->progress());v[3].setOnClickListener(x->profile());v[4].setOnClickListener(x->more());}
+    void clear(){root.removeAllViews();ScrollView sv=new ScrollView(this);body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(18,18,18,25);sv.addView(body);root.addView(sv);}
+    TextView t(String s,int z){TextView v=new TextView(this);v.setText(s);v.setTextColor(WHITE);v.setTextSize(z);v.setPadding(0,5,0,5);return v;}
+    TextView h(String s){TextView v=t(s,28);v.setTypeface(Typeface.DEFAULT_BOLD);v.setPadding(0,8,0,12);return v;}
+    TextView small(String s){TextView v=t(s,13);v.setTextColor(MUTED);return v;}
+    LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(LinearLayout.VERTICAL);c.setPadding(18,15,18,15);c.setBackgroundResource(R.drawable.card);LinearLayout.LayoutParams l=new LinearLayout.LayoutParams(-1,-2);l.setMargins(0,7,0,7);c.setLayoutParams(l);return c;}
+    TextView btn(String s,View.OnClickListener l){TextView v=t(s,15);v.setGravity(17);v.setTypeface(Typeface.DEFAULT_BOLD);v.setBackgroundResource(R.drawable.button);v.setPadding(10,14,10,14);v.setOnClickListener(l);LinearLayout.LayoutParams q=new LinearLayout.LayoutParams(-1,58);q.setMargins(0,6,0,6);v.setLayoutParams(q);return v;}
+    TextView outline(String s,View.OnClickListener l){TextView v=t(s,14);v.setGravity(17);v.setBackgroundResource(R.drawable.button_outline);v.setOnClickListener(l);LinearLayout.LayoutParams q=new LinearLayout.LayoutParams(-1,52);q.setMargins(0,5,0,5);v.setLayoutParams(q);return v;}
+    void add(String s){LinearLayout c=card();c.addView(t(s,15));body.addView(c);}
+    void home(){clear();body.addView(h("Gym Assistant"));TextView hero=t("Tu entrenamiento,\nsimple y poderoso.",30);hero.setTypeface(Typeface.DEFAULT_BOLD);body.addView(hero);body.addView(small("Planificá, entrená y progresá en un solo lugar."));LinearLayout c=card();TextView a=t("PRÓXIMO ENTRENAMIENTO",12);a.setTextColor(PURPLE);c.addView(a);c.addView(t(split()[done%days],22));c.addView(small(days+" días/semana • "+duration+" min • "+goal));c.addView(btn("⚡ EMPEZAR ENTRENAMIENTO",v->{generate();session();}),new LinearLayout.LayoutParams(-1,58));body.addView(c);add("🔥 Racha: "+streak+" días\n✓ Entrenamientos: "+done);body.addView(btn("✨ CREAR / EDITAR MI RUTINA",v->generator()));body.addView(outline("📋 VER PLAN COMPLETO",v->plan()));}
+    String[] split(){if(days<=2)return new String[]{"Full Body","Full Body"};if(days==3)return new String[]{"Push","Pull","Legs"};if(days==4)return new String[]{"Upper","Lower","Upper","Lower"};if(days==5)return new String[]{"Push","Pull","Legs","Upper","Lower"};return new String[]{"Push","Pull","Legs","Upper","Lower","Full Body"};}
+    void generator(){clear();body.addView(h("Crear mi rutina"));body.addView(small("La app adapta el plan según tus respuestas."));choice("Nivel",new String[]{"Principiante","Intermedio","Avanzado"},level,s->{level=s;save();generator();});choice("Objetivo",new String[]{"Hipertrofia","Fuerza","Pérdida de grasa","Rendimiento"},goal,s->{goal=s;save();generator();});choice("Días",new String[]{"2","3","4","5","6"},String.valueOf(days),s->{days=Integer.parseInt(s);save();generator();});choice("Duración",new String[]{"30","45","60","75","90"},String.valueOf(duration),s->{duration=Integer.parseInt(s);save();generator();});choice("Equipamiento",new String[]{"Gimnasio completo","Mancuernas","Casa","Peso corporal"},equipment,s->{equipment=s;save();generator();});body.addView(btn("✨ GENERAR MI PLAN",v->{generate();plan();}));}
+    void choice(String label,String[] o,String sel,final Pick cb){LinearLayout c=card();TextView l=t(label,17);l.setTypeface(Typeface.DEFAULT_BOLD);c.addView(l);Spinner sp=new Spinner(this);ArrayAdapter<String>a=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,o);sp.setAdapter(a);for(int i=0;i<o.length;i++)if(o[i].equals(sel))sp.setSelection(i);sp.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> x){}public void onItemSelected(android.widget.AdapterView<?>x,View y,int z,long q){cb.pick(o[z]);}});c.addView(sp);body.addView(c);}
+    interface Pick{void pick(String s);}
+    void generate(){ex.clear();if(goal.equals("Fuerza")){ex.add(new E("Sentadilla con barra","Piernas","4","4–6","2–3 min"));ex.add(new E("Press banca","Pecho","4","4–6","2–3 min"));ex.add(new E("Remo con barra","Espalda","4","5–7","2 min"));ex.add(new E("Peso muerto rumano","Femoral","3","6–8","2 min"));ex.add(new E("Press militar","Hombros","3","5–7","2 min"));}else if(goal.equals("Pérdida de grasa")){ex.add(new E("Sentadilla goblet","Piernas","3","10–12","60–90 s"));ex.add(new E("Press mancuernas","Pecho","3","10–12","60–90 s"));ex.add(new E("Jalón al pecho","Espalda","3","10–12","60–90 s"));ex.add(new E("Zancadas","Piernas","3","10/cada","60 s"));ex.add(new E("Remo en cable","Espalda","3","12–15","60 s"));}else{ex.add(new E("Sentadilla","Piernas","3–4","6–12","90–120 s"));ex.add(new E("Press banca","Pecho","3–4","6–12","90–120 s"));ex.add(new E("Jalón al pecho","Espalda","3–4","8–12","90 s"));ex.add(new E("Press militar","Hombros","3","8–12","90 s"));ex.add(new E("Curl bíceps","Bíceps","3","10–15","60–90 s"));ex.add(new E("Extensión tríceps","Tríceps","3","10–15","60–90 s"));}save();}
+    void plan(){clear();body.addView(h("Mi plan"));body.addView(small(level+" • "+goal+" • "+days+" días • "+duration+" min"));String[] s=split();for(int i=0;i<days;i++){final int d=i;LinearLayout c=card();TextView a=t("DÍA "+(i+1),12);a.setTextColor(PURPLE);c.addView(a);c.addView(t(s[i%s.length],20));c.addView(small("5–6 ejercicios • "+(i%2==0?"Principal":"Volumen + accesorios")));c.setOnClickListener(v->{generate();session();});body.addView(c);}body.addView(btn("▶ COMENZAR DÍA 1",v->{generate();session();}));}
+    void session(){clear();body.addView(h("Entrenamiento de hoy"));body.addView(small("Calentamiento 5–10 min • Series de aproximación antes de cargas pesadas."));LinearLayout c=card();int i=0;for(E e:ex){CheckBox b=new CheckBox(this);b.setText((++i)+". "+e.n+"\n"+e.m+" • "+e.s+" series × "+e.r+" • descanso "+e.rest);b.setTextColor(WHITE);b.setTextSize(15);b.setPadding(0,8,0,8);c.addView(b);}body.addView(c);body.addView(btn("✓ FINALIZAR Y GUARDAR",v->{done++;streak++;save();finishPage();}));body.addView(outline("← VOLVER AL PLAN",v->plan()));}
+    void finishPage(){clear();body.addView(h("¡Entrenamiento completado! 🔥"));body.addView(small("Tu sesión quedó registrada en el teléfono."));add("✓ Entrenamientos: "+done+"\n🔥 Racha: "+streak+" días\n🎯 "+goal);body.addView(btn("VER PROGRESO",v->progress()));body.addView(outline("INICIO",v->home()));}
+    void progress(){clear();body.addView(h("Progreso"));body.addView(small("Tus estadísticas se guardan localmente."));add("🔥 RACHA ACTUAL\n"+streak+" días");add("✓ ENTRENAMIENTOS\n"+done);add("📅 FRECUENCIA\n"+days+" días/semana");add("🎯 OBJETIVO\n"+goal);body.addView(btn("＋ REGISTRAR ENTRENAMIENTO",v->{done++;streak++;save();progress();}));body.addView(outline("↻ REINICIAR ESTADÍSTICAS",v->{done=0;streak=0;save();progress();}));}
+    void profile(){clear();body.addView(h("Mi perfil"));add("NIVEL\n"+level);add("OBJETIVO\n"+goal);add("DÍAS\n"+days+" por semana");add("DURACIÓN\n"+duration+" minutos");add("EQUIPAMIENTO\n"+equipment);body.addView(btn("✎ EDITAR PERFIL",v->generator()));}
+    void more(){clear();body.addView(h("Más"));body.addView(btn("⚙ CONFIGURACIÓN",v->settings()));body.addView(outline("ℹ SOBRE LA APP",v->{clear();body.addView(h("Gym Assistant"));add("Versión 1.0\n\nGenerador de rutinas, sesiones interactivas, progreso y perfil.\n\nFunciona sin cuenta y guarda tus datos en el teléfono.");body.addView(btn("VOLVER",v->more()));}));body.addView(outline("💡 CONSEJO DEL DÍA",v->{String[] q={"La técnica manda.","Progresá gradualmente.","Dormir también es parte del entrenamiento.","No hace falta cambiar de rutina cada semana.","Calentá antes de las cargas pesadas."};add(q[done%q.length]);}));}
+    void settings(){clear();body.addView(h("Configuración"));add("🌙 Modo oscuro\nInterfaz pensada para entrenar de noche.");body.addView(outline("BORRAR TODOS MIS DATOS",v->{p.edit().clear().apply();load();home();}));}
 }
